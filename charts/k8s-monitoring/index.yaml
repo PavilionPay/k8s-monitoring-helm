@@ -3,7 +3,7 @@ entries:
   alloy:
   - apiVersion: v2
     appVersion: v1.1.0
-    created: "2024-06-07T16:54:19.781916-04:00"
+    created: "2024-06-10T06:41:30.603818-04:00"
     dependencies:
     - condition: crds.create
       name: crds
@@ -20,7 +20,7 @@ entries:
   k8s-monitoring:
   - apiVersion: v2
     appVersion: 2.3.1
-    created: "2024-06-07T16:54:19.781068-04:00"
+    created: "2024-06-10T06:41:30.602937-04:00"
     dependencies:
     - name: alloy
       repository: https://grafana.github.io/helm-charts
@@ -62,7 +62,7 @@ entries:
       version: 1.35.0
     description: A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry
       data to a Grafana Stack.
-    digest: 1a907c52494ee20d8911eb82edfc486fb95a47b42f0b4490b0ccb08a2764b6bb
+    digest: e4575c7d5ba45a53287bc4614be3041f4255e1fbc4c41d211f0de2c09fab0079
     icon: https://raw.githubusercontent.com/grafana/grafana/main/public/img/grafana_icon.svg
     maintainers:
     - email: pete.wall@grafana.com
@@ -84,7 +84,7 @@ entries:
           url: https://github.com/prometheus-community/helm-charts
     apiVersion: v2
     appVersion: 2.12.0
-    created: "2024-06-07T16:54:19.782619-04:00"
+    created: "2024-06-10T06:41:30.604627-04:00"
     description: Install kube-state-metrics to generate and expose cluster-level metrics
     digest: 3be4e99851d3c05a3b186f4852d0620852c1a1247710b13256abb63aff4f35e2
     home: https://github.com/kubernetes/kube-state-metrics/
@@ -110,7 +110,7 @@ entries:
   opencost:
   - apiVersion: v2
     appVersion: 1.110.0
-    created: "2024-06-07T16:54:19.78344-04:00"
+    created: "2024-06-10T06:41:30.605521-04:00"
     description: OpenCost and OpenCost UI
     digest: 70a42b57ae50f38a0e5b7ca10956fc36afecf8d4e6a67d4467cc99fbdfe269cf
     home: https://github.com/opencost/opencost-helm-chart
@@ -139,7 +139,7 @@ entries:
           url: https://github.com/prometheus-community/helm-charts
     apiVersion: v2
     appVersion: 1.8.0
-    created: "2024-06-07T16:54:19.784173-04:00"
+    created: "2024-06-10T06:41:30.606335-04:00"
     description: A Helm chart for prometheus node-exporter
     digest: 75cdcb0d989ba242753278166af00310f483147c189f231e5887e7efe410ca3c
     home: https://github.com/prometheus/node_exporter/
@@ -175,7 +175,7 @@ entries:
           email: quentin.bisson@gmail.com
     apiVersion: v2
     appVersion: v0.73.0
-    created: "2024-06-07T16:54:19.790428-04:00"
+    created: "2024-06-10T06:41:30.613069-04:00"
     dependencies:
     - name: crds
       repository: ""
@@ -207,7 +207,7 @@ entries:
   prometheus-windows-exporter:
   - apiVersion: v2
     appVersion: 0.25.1
-    created: "2024-06-07T16:54:19.790967-04:00"
+    created: "2024-06-10T06:41:30.613685-04:00"
     description: A Helm chart for prometheus windows-exporter
     digest: 5067b9073422849a5aa8283fa31730beb856443873a578bd81d86165bd0f27f7
     home: https://github.com/prometheus-community/windows_exporter/
@@ -226,4 +226,4 @@ entries:
     urls:
     - charts/prometheus-windows-exporter-0.3.1.tgz
     version: 0.3.1
-generated: "2024-06-07T16:54:19.766939-04:00"
+generated: "2024-06-10T06:41:30.583933-04:00"
