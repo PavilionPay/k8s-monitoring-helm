@@ -232,6 +232,12 @@
                         "hostKey": {
                             "type": "string"
                         },
+                        "apimKeyKey": {
+                            "type": "string"
+                        },
+                        "apimKey": {
+                            "type": "string"
+                        },
                         "processors": {
                             "type": "object",
                             "properties": {
@@ -343,6 +349,12 @@
                             "type": "string"
                         },
                         "hostKey": {
+                            "type": "string"
+                        },
+                        "apimKeyKey": {
+                            "type": "string"
+                        },
+                        "apimKey": {
                             "type": "string"
                         },
                         "processors": {
@@ -478,6 +490,12 @@
                         "hostKey": {
                             "type": "string"
                         },
+                        "apimKeyKey": {
+                            "type": "string"
+                        },
+                        "apimKey": {
+                            "type": "string"
+                        },
                         "proxyURL": {
                             "type": "string"
                         },
@@ -539,6 +557,12 @@
                             "type": "string"
                         },
                         "hostKey": {
+                            "type": "string"
+                        },
+                        "apimKeyKey": {
+                            "type": "string"
+                        },
+                        "apimKey": {
                             "type": "string"
                         },
                         "protocol": {
