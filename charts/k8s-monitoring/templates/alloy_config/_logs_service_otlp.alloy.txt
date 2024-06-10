@@ -65,9 +65,13 @@ otelcol.exporter.otlphttp "logs_service" {
     auth = otelcol.auth.basic.logs_service.handler
 {{- end }}
 {{- if .tenantId }}
-    headers = { "Ocp-Apim-Subscription-Key" = remote.kubernetes.secret.log_service.data[{{ .api_key_otlp | quote }}], { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .tenantIdKey | quote }}]) }
+    basic_auth {
+        headers = { "Ocp-Apim-Subscription-Key" = remote.kubernetes.secret.log_service.data[{{ .basicAuth.passwordKey | quote }}], { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .tenantIdKey | quote }}]) }
+    }
 {{- else }}
-    headers = { "Ocp-Apim-Subscription-Key" = remote.kubernetes.secret.log_service.data[{{ .basicAuth.passwordKey | quote }}] }
+    basic_auth {
+        headers = { "Ocp-Apim-Subscription-Key" = remote.kubernetes.secret.log_service.data[{{ .basicAuth.passwordKey | quote }}] }
+    }
 {{- end }}
 {{- if .tls }}
     tls {
