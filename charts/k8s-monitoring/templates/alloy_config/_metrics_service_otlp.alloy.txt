@@ -50,7 +50,7 @@ otelcol.processor.memory_limiter "metrics_service" {
 {{ if eq .authMode "basic" }}
 otelcol.auth.basic "metrics_service" {
   username = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .basicAuth.usernameKey | quote }}])
-  password = remote.kubernetes.secret.metrics_service.data[{{ .apimKeyKey | quote }}]
+  password = remote.kubernetes.secret.metrics_service.data[{{ .basicAuth.passwordKey | quote }}]
 }
 {{- end }}
 {{ if eq .protocol "otlp" }}
@@ -65,9 +65,9 @@ otelcol.exporter.otlphttp "metrics_service" {
     auth = otelcol.auth.basic.metrics_service.handler
 {{- end }}
 {{- if .tenantId }}
-    headers = { "Ocp-Apim-Subscription-Key" = remote.kubernetes.secret.metrics_service.data[{{ .apimKeyKey | quote }}], { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .tenantIdKey | quote }}]) }
+    headers = { "Ocp-Apim-Subscription-Key" = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .basicAuth.passwordKey | quote }}]), { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .tenantIdKey | quote }}]) }
 {{- else }}
-   headers = { "Ocp-Apim-Subscription-Key" = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .apimKeyKey | quote }}]) }
+   headers = { "Ocp-Apim-Subscription-Key" = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .basicAuth.passwordKey | quote }}]) }
 {{- end }}
 {{- if .tls }}
     tls {
