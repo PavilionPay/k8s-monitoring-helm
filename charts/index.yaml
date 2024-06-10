@@ -3,7 +3,7 @@ entries:
   k8s-monitoring:
   - apiVersion: v2
     appVersion: 2.3.1
-    created: "2024-06-10T10:00:09.971219-04:00"
+    created: "2024-06-10T13:05:50.509505-04:00"
     dependencies:
     - name: alloy
       repository: https://grafana.github.io/helm-charts
@@ -43,8 +43,9 @@ entries:
       name: opencost
       repository: https://opencost.github.io/opencost-helm-chart
       version: 1.35.0
-    description: A Modified chart by pavilionpay to use a APIM key header.
-    digest: 94ad3f201860dc1a268c34d0a39a9a34208cc7a85eadadcfb4cd45a611dede62
+    description: A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry
+      data to a Grafana Stack.
+    digest: 14df20103f53cd9f32a1e3ada4e635c9df3abb4b2bf0d0c7a3a328b8a85f38f8
     icon: https://raw.githubusercontent.com/grafana/grafana/main/public/img/grafana_icon.svg
     maintainers:
     - email: pete.wall@grafana.com
@@ -58,4 +59,4 @@ entries:
     urls:
     - k8s-monitoring-1.0.12.tgz
     version: 1.0.12
-generated: "2024-06-10T10:00:09.944293-04:00"
+generated: "2024-06-10T13:05:50.492423-04:00"
