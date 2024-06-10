@@ -24,6 +24,8 @@ externalServices:
     # @section -- External Services (Prometheus)
     hostKey: host
 
+    apimKeyKey: apimKey
+
     # -- The type of server protocol for writing metrics. Valid options:
     #  "remote_write" will use Prometheus Remote Write,
     #  "otlp" will use OTLP,
@@ -142,6 +144,10 @@ externalServices:
     # -- The key for the host property in the secret
     # @section -- External Services (Loki)
     hostKey: host
+
+    # -- The key for the apimKey in the secret
+    # @section -- External Services (Loki)
+    apimKeyKey: apimKey
 
     # -- The type of server protocol for writing metrics. Valid options:
     #  "loki" will use Loki's HTTP API,
@@ -304,6 +310,9 @@ externalServices:
     # -- The key for the host property in the secret
     # @section -- External Services (Pyroscope)
     hostKey: host
+
+    # -- The key for the apimKey property in the secret
+    apimKeyKey: apimKey
 
     # -- HTTP proxy to proxy requests to Pyroscope through.
     # @section -- External Services (Pyroscope)

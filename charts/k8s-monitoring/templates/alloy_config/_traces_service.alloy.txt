@@ -22,7 +22,7 @@ otelcol.exporter.otlphttp "traces_service" {
 {{ if eq .authMode "basic" }}
     auth = otelcol.auth.basic.traces_service.handler
 {{- end }}
-    headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .tenantIdKey | quote }}]) }
+    headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .tenantIdKey | quote }}]), "Ocp-Apim-Subscription-Key" = nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .basicAuth.passwordKey | quote }}])  }
 {{- if .tlsOptions }}
     tls {
 {{ .tlsOptions | indent 6 }}
