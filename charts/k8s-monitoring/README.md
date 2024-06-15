@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 1.0.12](https://img.shields.io/badge/Version-1.0.12-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.3.1](https://img.shields.io/badge/AppVersion-2.3.1-informational?style=flat-square)
+![Version: 1.0.13](https://img.shields.io/badge/Version-1.0.13-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.3.4](https://img.shields.io/badge/AppVersion-2.3.4-informational?style=flat-square)
 
 A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry data to a Grafana Stack.
 
@@ -136,14 +136,14 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | alloy | 0.3.1 |
-| https://grafana.github.io/helm-charts | alloy-events(alloy) | 0.3.1 |
-| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 0.3.1 |
-| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 0.3.1 |
+| https://grafana.github.io/helm-charts | alloy | 0.3.2 |
+| https://grafana.github.io/helm-charts | alloy-events(alloy) | 0.3.2 |
+| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 0.3.2 |
+| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 0.3.2 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.35.0 |
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.19.0 |
-| https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.34.0 |
-| https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 11.0.0 |
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.20.0 |
+| https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.36.0 |
+| https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 12.0.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.3.1 |
 <!-- markdownlint-enable no-bare-urls -->
 
@@ -190,7 +190,8 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.loki.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.loki.basicAuth.username | string | `""` | Loki basic auth username |
 | externalServices.loki.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
-| externalServices.loki.externalLabels | object | `{}` | Custom labels to be added to all logs and events |
+| externalServices.loki.externalLabels | object | `{}` | Custom labels to be added to all logs and events, all values are treated as strings and automatically quoted. |
+| externalServices.loki.externalLabelsFrom | object | `{}` | Custom labels to be added to all logs and events through a dynamic reference, all values are treated as raw strings and not quoted. |
 | externalServices.loki.host | string | `""` | Loki host where logs and events will be sent |
 | externalServices.loki.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.loki.processors.batch.maxSize | int | `0` | Upper limit of a batch size. When set to 0, there is no upper limit. |
@@ -219,7 +220,8 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.prometheus.basicAuth.username | string | `""` | Prometheus basic auth username |
 | externalServices.prometheus.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
-| externalServices.prometheus.externalLabels | object | `{}` | Custom labels to be added to all time series |
+| externalServices.prometheus.externalLabels | object | `{}` | Custom labels to be added to all time series, all values are treated as strings and automatically quoted. |
+| externalServices.prometheus.externalLabelsFrom | object | `{}` | Custom labels to be added to all time series through a dynamic reference, all values are treated as raw strings and not quoted. |
 | externalServices.prometheus.host | string | `""` | Prometheus host where metrics will be sent |
 | externalServices.prometheus.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.prometheus.processors.batch.maxSize | int | `0` | Upper limit of a batch size. When set to 0, there is no upper limit. |
@@ -231,6 +233,15 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.protocol | string | `"remote_write"` | The type of server protocol for writing metrics. Valid options:  "remote_write" will use Prometheus Remote Write,  "otlp" will use OTLP,  "otlphttp" will use OTLP HTTP |
 | externalServices.prometheus.proxyURL | string | `""` | HTTP proxy to proxy requests to Prometheus through. |
 | externalServices.prometheus.queryEndpoint | string | `"/api/prom/api/v1/query"` | Prometheus metrics query endpoint. Preset for Grafana Cloud Metrics instances. |
+| externalServices.prometheus.queue_config.batch_send_deadline | string | 5s | Maximum time samples will wait in the buffer before sending. |
+| externalServices.prometheus.queue_config.capacity | int | 10000 | Number of samples to buffer per shard. |
+| externalServices.prometheus.queue_config.max_backoff | string | 5s | Maximum retry delay. |
+| externalServices.prometheus.queue_config.max_samples_per_send | int | 2000 | Maximum number of samples per send. |
+| externalServices.prometheus.queue_config.max_shards | int | 50 | Maximum number of concurrent shards sending samples to the endpoint. |
+| externalServices.prometheus.queue_config.min_backoff | string | 30ms | Initial retry delay. The backoff time gets doubled for each retry. |
+| externalServices.prometheus.queue_config.min_shards | int | 1 | Minimum amount of concurrent shards sending samples to the endpoint. |
+| externalServices.prometheus.queue_config.retry_on_http_429 | bool | true | Retry when an HTTP 429 status code is received. |
+| externalServices.prometheus.queue_config.sample_age_limit | string | 0s | Maximum age of samples to send. |
 | externalServices.prometheus.secret.create | bool | `true` | Should this Helm chart create the secret. If false, you must define the name and namespace values. |
 | externalServices.prometheus.secret.name | string | `""` | The name of the secret. |
 | externalServices.prometheus.secret.namespace | string | `""` | The namespace of the secret. Only used if secret.create = "false" |
@@ -253,7 +264,8 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.pyroscope.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.pyroscope.basicAuth.username | string | `""` | Pyroscope basic auth username |
 | externalServices.pyroscope.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
-| externalServices.pyroscope.externalLabels | object | `{}` | Custom labels to be added to all profiles |
+| externalServices.pyroscope.externalLabels | object | `{}` | Custom labels to be added to all profiles, all values are treated as strings and automatically quoted. |
+| externalServices.pyroscope.externalLabelsFrom | object | `{}` | Custom labels to be added to all profiles through a dynamic reference, all values are treated as raw strings and not quoted. |
 | externalServices.pyroscope.host | string | `""` | Pyroscope host where profiles will be sent |
 | externalServices.pyroscope.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.pyroscope.proxyURL | string | `""` | HTTP proxy to proxy requests to Pyroscope through. |
@@ -314,6 +326,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 |-----|------|---------|-------------|
 | logs.cluster_events.enabled | bool | `true` | Scrape Kubernetes cluster events |
 | logs.cluster_events.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Cluster Events configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
+| logs.cluster_events.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for cluster events. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
 | logs.cluster_events.logFormat | string | `"logfmt"` | Log format used to forward cluster events. Allowed values: `logfmt` (default), `json`. |
 | logs.cluster_events.logToStdout | bool | `false` | Logs the cluster events to stdout. Useful for debugging. |
 | logs.cluster_events.namespaces | list | `[]` | List of namespaces to watch for events (`[]` means all namespaces) |
@@ -385,6 +398,13 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.alloy.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Grafana Alloy to the minimal set required for Kubernetes Monitoring. See [Allow List for Grafana Alloy](#allow-list-for-grafana-alloy) |
 | metrics.alloy.metricsTuning.useIntegrationAllowList | bool | `false` | Filter the list of metrics from Grafana Alloy to the minimal set required for Kubernetes Monitoring as well as the Grafana Alloy integration. |
 | metrics.alloy.scrapeInterval | string | 60s | How frequently to scrape metrics from Grafana Alloy. Overrides metrics.scrapeInterval |
+
+### Metrics Job: Alloy Modules
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| metrics.alloyModules.connections | list | `[]` | List of connection configurations used by modules.  Configures the import.git component ([docs](https://grafana.com/docs/alloy/latest/reference/components/import.git/) <br>-   `alias: ""` the alias of the connection <br>-   `repository: ""` URL of the Git repository containing the module. <br>-   `revision: ""` Branch, tag, or commit to be checked out. <br>-   `pull_frequency: 15m` How often the module should check for updates. <br>-   `default: true` If true, this connection is used as the default when none is specified. <br>-   `basic_auth: {}` Credentials for basic authentication if needed. ([docs](https://grafana.com/docs/alloy/latest/reference/config-blocks/import.git/#basic_auth-block)) <br>-   `ssh_key: {}` Provides SSH key details for secure connections. ([docs](https://grafana.com/docs/alloy/latest/reference/config-blocks/import.git/#ssh_key-block)) |
+| metrics.alloyModules.modules | list | `[]` | List of Modules to import.  Each module is expected to have a "kubernetes" module and a "scrape" component. Each module can have the following properties: <br>-   `name: ""` the name to use for the module. *note:* this is automatically prefixed with module_ to avoid conflicts with core components <br>-   `path: ""` the path to the alloy module <br>-   `connection: ""` (optional) the alias of the connection to use, if not specified the default connection is used <br>-   `targets: {}` (optional) Additional arguments to be passed to the modules kubernetes component <br>-   `scrape: {}` (optional) Additional arguments to be passed to the modules scrape component <br>-   `extraRelabelingRules: ""` additional relabeling rules for the discovery.relabel component <br>-   `extraMetricRelabelingRules:` additional relabeling rules for the prometheus.relabel component |
 
 ### Metrics Job: ApiServer
 
@@ -718,12 +738,6 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | traces.enabled | bool | `false` | Receive and forward traces. |
 | traces.receiver.filters | object | `{"span":[],"spanevent":[]}` | Apply a filter to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/)) |
 | traces.receiver.transforms | object | `{"resource":[],"span":[],"spanevent":[]}` | Apply a transformation to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/)) |
-
-### Other Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| logs.cluster_events.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for cluster events. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
 
 ## Customizing the configuration
 
