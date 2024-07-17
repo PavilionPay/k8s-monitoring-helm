@@ -3,7 +3,7 @@ entries:
   k8s-monitoring:
   - apiVersion: v2
     appVersion: 2.3.4
-    created: "2024-06-15T09:21:03.585969-04:00"
+    created: "2024-07-17T08:43:09.377619-04:00"
     dependencies:
     - name: alloy
       repository: https://grafana.github.io/helm-charts
@@ -45,7 +45,7 @@ entries:
       version: 1.35.0
     description: A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry
       data to a Grafana Stack.
-    digest: 00d63f027977c0e9c8faf947cee6979aff83f2f879916859164378c695f77e68
+    digest: 4f7a496da01983f5bcd7bee280455e82c8bacfbf26e6bea48730a0054f375fa3
     icon: https://raw.githubusercontent.com/grafana/grafana/main/public/img/grafana_icon.svg
     maintainers:
     - email: pete.wall@grafana.com
@@ -57,64 +57,6 @@ entries:
     - https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring
     type: application
     urls:
-    - k8s-monitoring-1.0.13.tgz
-    version: 1.0.13
-  - apiVersion: v2
-    appVersion: 2.3.1
-    created: "2024-06-15T09:21:03.573936-04:00"
-    dependencies:
-    - name: alloy
-      repository: https://grafana.github.io/helm-charts
-      version: 0.3.1
-    - alias: alloy-events
-      condition: logs.cluster_events.enabled
-      name: alloy
-      repository: https://grafana.github.io/helm-charts
-      version: 0.3.1
-    - alias: alloy-logs
-      condition: logs.pod_logs.enabled
-      name: alloy
-      repository: https://grafana.github.io/helm-charts
-      version: 0.3.1
-    - alias: alloy-profiles
-      condition: profiles.enabled
-      name: alloy
-      repository: https://grafana.github.io/helm-charts
-      version: 0.3.1
-    - condition: kube-state-metrics.enabled
-      name: kube-state-metrics
-      repository: https://prometheus-community.github.io/helm-charts
-      version: 5.19.0
-    - condition: prometheus-node-exporter.enabled
-      name: prometheus-node-exporter
-      repository: https://prometheus-community.github.io/helm-charts
-      version: 4.34.0
-    - condition: prometheus-operator-crds.enabled
-      name: prometheus-operator-crds
-      repository: https://prometheus-community.github.io/helm-charts
-      version: 11.0.0
-    - condition: prometheus-windows-exporter.enabled
-      name: prometheus-windows-exporter
-      repository: https://prometheus-community.github.io/helm-charts
-      version: 0.3.1
-    - condition: opencost.enabled
-      name: opencost
-      repository: https://opencost.github.io/opencost-helm-chart
-      version: 1.35.0
-    description: A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry
-      data to a Grafana Stack.
-    digest: bf6812e4177d12a5f9a42ab107239028919de413f8b856a6579ee6151c8a98d9
-    icon: https://raw.githubusercontent.com/grafana/grafana/main/public/img/grafana_icon.svg
-    maintainers:
-    - email: pete.wall@grafana.com
-      name: petewall
-    - email: stephen.lang@grafana.com
-      name: skl
-    name: k8s-monitoring
-    sources:
-    - https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring
-    type: application
-    urls:
-    - k8s-monitoring-1.0.12.tgz
-    version: 1.0.12
-generated: "2024-06-15T09:21:03.558954-04:00"
+    - k8s-monitoring-1.0.14.tgz
+    version: 1.0.14
+generated: "2024-07-17T08:43:09.363528-04:00"
