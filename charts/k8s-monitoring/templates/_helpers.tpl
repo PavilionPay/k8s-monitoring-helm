@@ -12,6 +12,15 @@
   {{- end -}}
 {{- end -}}
 
+{{/* This returns the first enabled alloy instance */}}
+{{- define "getEnabledAlloy" -}}
+{{- if .Values.alloy.enabled }}alloy
+{{- else if (and .Values.logs.enabled .Values.logs.cluster_events.enabled) }}alloy-events
+{{- else if (and .Values.logs.enabled .Values.logs.pod_logs.enabled) }}alloy-logs
+{{- else if .Values.profiles.enabled }}alloy-profiles
+{{- end -}}
+{{- end -}}
+
 {{- define "kubernetes_monitoring_telemetry.metrics" -}}
 {{- $metrics := list -}}
 {{- if .Values.metrics.enabled -}}
@@ -25,6 +34,7 @@
   {{- if .Values.metrics.cadvisor.enabled -}}{{- $metrics = append $metrics "cadvisor" -}}{{- end -}}
   {{- if .Values.metrics.apiserver.enabled -}}{{- $metrics = append $metrics "apiserver" }}{{ end -}}
   {{- if .Values.metrics.cost.enabled -}}{{- $metrics = append $metrics "cost" }}{{ end -}}
+  {{- if .Values.metrics.kepler.enabled -}}{{- $metrics = append $metrics "kepler" }}{{ end -}}
   {{- if .Values.extraConfig -}}{{- $metrics = append $metrics "extraConfig" }}{{ end -}}
 {{- else -}}
   {{- $metrics = append $metrics "disabled" -}}
@@ -56,7 +66,8 @@
 {{- if index (index .Values "prometheus-node-exporter").enabled -}}{{- $deployments = append $deployments "prometheus-node-exporter" -}}{{- end -}}
 {{- if index (index .Values "prometheus-windows-exporter").enabled -}}{{- $deployments = append $deployments "prometheus-windows-exporter" -}}{{- end -}}
 {{- if index (index .Values "prometheus-operator-crds").enabled -}}{{- $deployments = append $deployments "prometheus-operator-crds" -}}{{- end -}}
-{{- if index (index .Values "opencost").enabled -}}{{- $deployments = append $deployments "opencost" -}}{{- end -}}
+{{- if index .Values.opencost.enabled -}}{{- $deployments = append $deployments "opencost" -}}{{- end -}}
+{{- if index .Values.kepler.enabled -}}{{- $deployments = append $deployments "kepler" -}}{{- end -}}
 {{- join "," $deployments -}}
 {{- end }}
 
@@ -94,6 +105,13 @@
 
 {{- define "escape_label" -}}
 {{ . | replace "-" "_" | replace "." "_" | replace "/" "_" }}
+{{- end }}
+
+{{- define "kubernetes_monitoring.receiver.grpc" }}
+http://{{ include "alloy.fullname" .Subcharts.alloy }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.receivers.grpc.port }}
+{{- end }}
+{{- define "kubernetes_monitoring.receiver.http" }}
+http://{{ include "alloy.fullname" .Subcharts.alloy }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.receivers.http.port }}
 {{- end }}
 
 {{- define "grafana-agent.fullname" -}}

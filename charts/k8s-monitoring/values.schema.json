@@ -5,6 +5,17 @@
         "alloy": {
             "type": "object",
             "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "liveDebugging": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
                 "logging": {
                     "type": "object",
                     "properties": {
@@ -31,6 +42,14 @@
         "alloy-events": {
             "type": "object",
             "properties": {
+                "liveDebugging": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
                 "logging": {
                     "type": "object",
                     "properties": {
@@ -57,6 +76,14 @@
         "alloy-logs": {
             "type": "object",
             "properties": {
+                "liveDebugging": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
                 "logging": {
                     "type": "object",
                     "properties": {
@@ -83,6 +110,14 @@
         "alloy-profiles": {
             "type": "object",
             "properties": {
+                "liveDebugging": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
                 "logging": {
                     "type": "object",
                     "properties": {
@@ -101,6 +136,22 @@
                                 "info",
                                 "debug"
                             ]
+                        }
+                    }
+                }
+            }
+        },
+        "beyla": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "podAnnotations": {
+                    "type": "object",
+                    "properties": {
+                        "k8s.grafana.com/logs.job": {
+                            "type": "string"
                         }
                     }
                 }
@@ -164,6 +215,14 @@
                         }
                     }
                 },
+                "serviceAccount": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "tolerations": {
                     "type": "array"
                 }
@@ -189,8 +248,33 @@
                         }
                     }
                 },
+                "serviceAccount": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "tolerations": {
-                    "type": "array"
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "effect": {
+                                "type": "string"
+                            },
+                            "key": {
+                                "type": "string"
+                            },
+                            "operator": {
+                                "type": "string"
+                            },
+                            "value": {
+                                "type": "string"
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -201,7 +285,12 @@
                     "type": "object",
                     "properties": {
                         "authMode": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "none",
+                                "basic",
+                                "oauth2"
+                            ]
                         },
                         "basicAuth": {
                             "type": "object",
@@ -229,11 +318,58 @@
                         "externalLabelsFrom": {
                             "type": "object"
                         },
+                        "extraHeaders": {
+                            "type": "object"
+                        },
+                        "extraHeadersFrom": {
+                            "type": "object"
+                        },
                         "host": {
                             "type": "string"
                         },
                         "hostKey": {
                             "type": "string"
+                        },
+                        "oauth2": {
+                            "type": "object",
+                            "properties": {
+                                "clientId": {
+                                    "type": "string"
+                                },
+                                "clientIdKey": {
+                                    "type": "string"
+                                },
+                                "clientSecret": {
+                                    "type": "string"
+                                },
+                                "clientSecretFile": {
+                                    "type": "string"
+                                },
+                                "clientSecretKey": {
+                                    "type": "string"
+                                },
+                                "endpointParams": {
+                                    "type": "object"
+                                },
+                                "noProxy": {
+                                    "type": "string"
+                                },
+                                "proxyConnectHeader": {
+                                    "type": "object"
+                                },
+                                "proxyFromEnvironment": {
+                                    "type": "boolean"
+                                },
+                                "proxyURL": {
+                                    "type": "string"
+                                },
+                                "scopes": {
+                                    "type": "array"
+                                },
+                                "tokenURL": {
+                                    "type": "string"
+                                }
+                            }
                         },
                         "processors": {
                             "type": "object",
@@ -317,7 +453,13 @@
                     "type": "object",
                     "properties": {
                         "authMode": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "none",
+                                "basic",
+                                "oauth2",
+                                "bearerToken"
+                            ]
                         },
                         "basicAuth": {
                             "type": "object",
@@ -339,10 +481,30 @@
                                 }
                             }
                         },
+                        "bearerToken": {
+                            "type": "object",
+                            "properties": {
+                                "token": {
+                                    "type": "string"
+                                },
+                                "tokenFile": {
+                                    "type": "string"
+                                },
+                                "tokenKey": {
+                                    "type": "string"
+                                }
+                            }
+                        },
                         "externalLabels": {
                             "type": "object"
                         },
                         "externalLabelsFrom": {
+                            "type": "object"
+                        },
+                        "extraHeaders": {
+                            "type": "object"
+                        },
+                        "extraHeadersFrom": {
                             "type": "object"
                         },
                         "host": {
@@ -350,6 +512,47 @@
                         },
                         "hostKey": {
                             "type": "string"
+                        },
+                        "oauth2": {
+                            "type": "object",
+                            "properties": {
+                                "clientId": {
+                                    "type": "string"
+                                },
+                                "clientIdKey": {
+                                    "type": "string"
+                                },
+                                "clientSecret": {
+                                    "type": "string"
+                                },
+                                "clientSecretFile": {
+                                    "type": "string"
+                                },
+                                "clientSecretKey": {
+                                    "type": "string"
+                                },
+                                "endpointParams": {
+                                    "type": "object"
+                                },
+                                "noProxy": {
+                                    "type": "string"
+                                },
+                                "proxyConnectHeader": {
+                                    "type": "object"
+                                },
+                                "proxyFromEnvironment": {
+                                    "type": "boolean"
+                                },
+                                "proxyURL": {
+                                    "type": "string"
+                                },
+                                "scopes": {
+                                    "type": "array"
+                                },
+                                "tokenURL": {
+                                    "type": "string"
+                                }
+                            }
                         },
                         "processors": {
                             "type": "object",
@@ -513,6 +716,12 @@
                         "externalLabelsFrom": {
                             "type": "object"
                         },
+                        "extraHeaders": {
+                            "type": "object"
+                        },
+                        "extraHeadersFrom": {
+                            "type": "object"
+                        },
                         "host": {
                             "type": "string"
                         },
@@ -575,6 +784,12 @@
                                     "type": "string"
                                 }
                             }
+                        },
+                        "extraHeaders": {
+                            "type": "object"
+                        },
+                        "extraHeadersFrom": {
+                            "type": "object"
                         },
                         "host": {
                             "type": "string"
@@ -643,11 +858,53 @@
                 }
             }
         },
+        "kepler": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "extraEnvVars": {
+                    "type": "object",
+                    "properties": {
+                        "EXPOSE_ESTIMATED_IDLE_POWER_METRICS": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "kube-state-metrics": {
             "type": "object",
             "properties": {
                 "enabled": {
                     "type": "boolean"
+                },
+                "metricLabelsAllowlist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tolerations": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "effect": {
+                                "type": "string"
+                            },
+                            "key": {
+                                "type": "string"
+                            },
+                            "operator": {
+                                "type": "string"
+                            },
+                            "value": {
+                                "type": "string"
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -692,9 +949,6 @@
                     "properties": {
                         "enabled": {
                             "type": "boolean"
-                        },
-                        "extraConfig": {
-                            "type": "string"
                         },
                         "extraRelabelingRules": {
                             "type": "string"
@@ -742,6 +996,14 @@
                         "annotation": {
                             "type": "string"
                         },
+                        "annotations": {
+                            "type": "object",
+                            "properties": {
+                                "job": {
+                                    "type": "string"
+                                }
+                            }
+                        },
                         "discovery": {
                             "type": "string",
                             "enum": [
@@ -771,11 +1033,17 @@
                                 "api"
                             ]
                         },
+                        "labels": {
+                            "type": "object"
+                        },
                         "namespaces": {
                             "type": "array",
                             "items": {
                                 "type": "string"
                             }
+                        },
+                        "structuredMetadata": {
+                            "type": "object"
                         }
                     }
                 },
@@ -1060,8 +1328,19 @@
                                 "metricsScheme": {
                                     "type": "string"
                                 },
+                                "metricsScrapeInterval": {
+                                    "type": "string"
+                                },
                                 "scrape": {
                                     "type": "string"
+                                }
+                            }
+                        },
+                        "bearerToken": {
+                            "type": "object",
+                            "properties": {
+                                "enabled": {
+                                    "type": "boolean"
                                 }
                             }
                         },
@@ -1097,6 +1376,48 @@
                                     }
                                 }
                             }
+                        },
+                        "scrapeInterval": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "beyla": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "extraMetricRelabelingRules": {
+                            "type": "string"
+                        },
+                        "extraRelabelingRules": {
+                            "type": "string"
+                        },
+                        "labelMatchers": {
+                            "type": "object",
+                            "properties": {
+                                "app.kubernetes.io/name": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "maxCacheSize": {
+                            "type": "null"
+                        },
+                        "metricsTuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array"
+                                },
+                                "includeMetrics": {
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "scrapeInterval": {
+                            "type": "string"
                         }
                     }
                 },
@@ -1242,6 +1563,48 @@
                 },
                 "extraRelabelingRules": {
                     "type": "string"
+                },
+                "kepler": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "extraMetricRelabelingRules": {
+                            "type": "string"
+                        },
+                        "extraRelabelingRules": {
+                            "type": "string"
+                        },
+                        "labelMatchers": {
+                            "type": "object",
+                            "properties": {
+                                "app.kubernetes.io/name": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "maxCacheSize": {
+                            "type": "null"
+                        },
+                        "metricsTuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array"
+                                },
+                                "includeMetrics": {
+                                    "type": "array"
+                                },
+                                "useDefaultAllowList": {
+                                    "type": "boolean"
+                                }
+                            }
+                        },
+                        "scrapeInterval": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "kube-state-metrics": {
                     "type": "object",
@@ -1770,6 +2133,40 @@
                 "enabled": {
                     "type": "boolean"
                 },
+                "java": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "extraRelabelingRules": {
+                            "type": "string"
+                        },
+                        "namespaces": {
+                            "type": "array"
+                        },
+                        "profilingConfig": {
+                            "type": "object",
+                            "properties": {
+                                "alloc": {
+                                    "type": "string"
+                                },
+                                "cpu": {
+                                    "type": "boolean"
+                                },
+                                "interval": {
+                                    "type": "string"
+                                },
+                                "lock": {
+                                    "type": "string"
+                                },
+                                "sampleRate": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                },
                 "pprof": {
                     "type": "object",
                     "properties": {
@@ -1865,6 +2262,14 @@
                 "deployGrafanaAgentService": {
                     "type": "boolean"
                 },
+                "grafanaCloudMetrics": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
                 "grpc": {
                     "type": "object",
                     "properties": {
@@ -1876,6 +2281,9 @@
                         },
                         "port": {
                             "type": "integer"
+                        },
+                        "tls": {
+                            "type": "object"
                         }
                     }
                 },
@@ -1890,6 +2298,9 @@
                         },
                         "port": {
                             "type": "integer"
+                        },
+                        "tls": {
+                            "type": "object"
                         }
                     }
                 },
@@ -1942,6 +2353,9 @@
                                     "type": "integer"
                                 }
                             }
+                        },
+                        "tls": {
+                            "type": "object"
                         }
                     }
                 },
@@ -2003,6 +2417,9 @@
                         },
                         "port": {
                             "type": "integer"
+                        },
+                        "tls": {
+                            "type": "object"
                         }
                     }
                 }
@@ -2064,6 +2481,14 @@
                     "type": "object",
                     "properties": {
                         "kubernetes.io/os": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "serviceAccount": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
                             "type": "string"
                         }
                     }

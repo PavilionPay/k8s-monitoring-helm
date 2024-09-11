@@ -6,11 +6,11 @@ metadata:
   name: k8smon-alloy-events
   namespace: default
   labels:
-    helm.sh/chart: alloy-events-0.3.2
+    helm.sh/chart: alloy-events-0.7.0
     app.kubernetes.io/name: alloy-events
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.3.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -22,27 +22,11 @@ metadata:
   name: k8smon-alloy-logs
   namespace: default
   labels:
-    helm.sh/chart: alloy-logs-0.3.2
+    helm.sh/chart: alloy-logs-0.7.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: rbac
----
-# Source: k8s-monitoring/charts/alloy/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: k8smon-alloy
-  namespace: default
-  labels:
-    helm.sh/chart: alloy-0.3.2
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.3.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -59,40 +43,6 @@ data:
   host: "aHR0cHM6Ly9sb2tpLmV4YW1wbGUuY29t"
   username: "MTIzNDU="
   password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
----
-# Source: k8s-monitoring/templates/alloy-config.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8smon-alloy
-  namespace: default
-data:
-  config.alloy: |-
-    discovery.kubernetes "nodes" {
-      role = "node"
-    }
-    
-    discovery.kubernetes "services" {
-      role = "service"
-    }
-    
-    discovery.kubernetes "endpoints" {
-      role = "endpoints"
-    }
-    
-    discovery.kubernetes "pods" {
-      role = "pod"
-    }
-    
-    
-    
-    
-    
-    // Processors
-    logging {
-      level  = "info"
-      format = "logfmt"
-    }
 ---
 # Source: k8s-monitoring/templates/alloy-events-config.yaml
 apiVersion: v1
@@ -194,6 +144,18 @@ data:
         target_label = "job"
       }
       rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+        regex         = "(.+)"
+        target_label  = "app_kubernetes_io_name"
+      }
+    
+      rule {
+        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
+        regex         = "(.+)"
+        target_label  = "job"
+      }
+    
+      rule {
         source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
         separator = "/"
         action = "replace"
@@ -231,7 +193,7 @@ data:
     
     loki.process "pod_logs" {
       stage.match {
-        selector = "{tmp_container_runtime=\"containerd\"}"
+        selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
         // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
         stage.cri {}
     
@@ -244,21 +206,6 @@ data:
         }
       }
     
-      stage.match {
-        selector = "{tmp_container_runtime=\"cri-o\"}"
-        // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-        stage.cri {}
-    
-        // Set the extract flags and stream values as labels
-        stage.labels {
-          values = {
-            flags  = "",
-            stream  = "",
-          }
-        }
-      }
-    
-      // if the label tmp_container_runtime from above is docker parse using docker
       stage.match {
         selector = "{tmp_container_runtime=\"docker\"}"
         // the docker processing stage extracts the following k/v pairs: log, stream, time
@@ -272,11 +219,14 @@ data:
         }
       }
     
-      // Drop the filename label, since it's not really useful in the context of Kubernetes, where we already have
-      // cluster, namespace, pod, and container labels.
-      // Also drop the temporary container runtime label as it is no longer needed.
+      // Drop the filename label, since it's not really useful in the context of Kubernetes, where we already have cluster,
+      // namespace, pod, and container labels. Drop any structured metadata. Also drop the temporary
+      // container runtime label as it is no longer needed.
       stage.label_drop {
-        values = ["filename", "tmp_container_runtime"]
+        values = [
+          "filename",
+          "tmp_container_runtime",
+        ]
       }
       forward_to = [loki.process.logs_service.receiver]
     }
@@ -329,8 +279,9 @@ data:
     }
     
     loki.source.journal "worker" {
-      max_age = "8h"
       path = "/var/log/journal"
+      format_as_json = false
+      max_age = "8h"
       relabel_rules = loki.relabel.journal.rules
       labels = {
         job = "integrations/kubernetes/journal",
@@ -342,29 +293,17 @@ data:
       forward_to = [loki.process.logs_service.receiver]
     }
 ---
-# Source: k8s-monitoring/templates/kubernetes-monitoring-telemetry.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: kubernetes-monitoring-telemetry
-  namespace: default
-data:
-  metrics.prom: |
-    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
-    # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="1.0.13", namespace="default", metrics="disabled", logs="enabled,events,pod_logs,journal", traces="disabled", deployments=""} 1
----
 # Source: k8s-monitoring/charts/alloy-events/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: k8smon-alloy-events
   labels:
-    helm.sh/chart: alloy-events-0.3.2
+    helm.sh/chart: alloy-events-0.7.0
     app.kubernetes.io/name: alloy-events
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.3.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -460,111 +399,11 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.3.2
+    helm.sh/chart: alloy-logs-0.7.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: rbac
-rules:
-  # Rules which allow discovery.kubernetes to function.
-  - apiGroups:
-      - ""
-      - "discovery.k8s.io"
-      - "networking.k8s.io"
-    resources:
-      - endpoints
-      - endpointslices
-      - ingresses
-      - nodes
-      - nodes/proxy
-      - nodes/metrics
-      - pods
-      - services
-    verbs:
-      - get
-      - list
-      - watch
-  # Rules which allow loki.source.kubernetes and loki.source.podlogs to work.
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-      - pods/log
-      - namespaces
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - "monitoring.grafana.com"
-    resources:
-      - podlogs
-    verbs:
-      - get
-      - list
-      - watch
-  # Rules which allow mimir.rules.kubernetes to work.
-  - apiGroups: ["monitoring.coreos.com"]
-    resources:
-      - prometheusrules
-    verbs:
-      - get
-      - list
-      - watch
-  - nonResourceURLs:
-      - /metrics
-    verbs:
-      - get
-  # Rules for prometheus.kubernetes.*
-  - apiGroups: ["monitoring.coreos.com"]
-    resources:
-      - podmonitors
-      - servicemonitors
-      - probes
-    verbs:
-      - get
-      - list
-      - watch
-  # Rules which allow eventhandler to work.
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - get
-      - list
-      - watch
-  # needed for remote.kubernetes.*
-  - apiGroups: [""]
-    resources:
-      - "configmaps"
-      - "secrets"
-    verbs:
-      - get
-      - list
-      - watch
-  # needed for otelcol.processor.k8sattributes
-  - apiGroups: ["apps"]
-    resources: ["replicasets"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["extensions"]
-    resources: ["replicasets"]
-    verbs: ["get", "list", "watch"]
----
-# Source: k8s-monitoring/charts/alloy/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: k8smon-alloy
-  labels:
-    helm.sh/chart: alloy-0.3.2
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.3.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -660,11 +499,11 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-events
   labels:
-    helm.sh/chart: alloy-events-0.3.2
+    helm.sh/chart: alloy-events-0.7.0
     app.kubernetes.io/name: alloy-events
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.3.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -683,11 +522,11 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.3.2
+    helm.sh/chart: alloy-logs-0.7.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.3.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -700,40 +539,17 @@ subjects:
     name: k8smon-alloy-logs
     namespace: default
 ---
-# Source: k8s-monitoring/charts/alloy/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: k8smon-alloy
-  labels:
-    helm.sh/chart: alloy-0.3.2
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.1.1"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: rbac
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: k8smon-alloy
-subjects:
-  - kind: ServiceAccount
-    name: k8smon-alloy
-    namespace: default
----
 # Source: k8s-monitoring/charts/alloy-events/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-alloy-events
   labels:
-    helm.sh/chart: alloy-events-0.3.2
+    helm.sh/chart: alloy-events-0.7.0
     app.kubernetes.io/name: alloy-events
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.3.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -755,11 +571,11 @@ kind: Service
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.3.2
+    helm.sh/chart: alloy-logs-0.7.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.3.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -774,185 +590,6 @@ spec:
       port: 12345
       targetPort: 12345
       protocol: "TCP"
----
-# Source: k8s-monitoring/charts/alloy/templates/cluster_service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: k8smon-alloy-cluster
-  labels:
-    helm.sh/chart: alloy-0.3.2
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.1.1"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: networking
-spec:
-  type: ClusterIP
-  clusterIP: 'None'
-  selector:
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-  ports:
-    # Do not include the -metrics suffix in the port name, otherwise metrics
-    # can be double-collected with the non-headless Service if it's also
-    # enabled.
-    #
-    # This service should only be used for clustering, and not metric
-    # collection.
-    - name: http
-      port: 12345
-      targetPort: 12345
-      protocol: "TCP"
-    - name: otlp-grpc
-      port: 4317
-      targetPort: 4317
-      protocol: TCP
-    - name: otlp-http
-      port: 4318
-      targetPort: 4318
-      protocol: TCP
-    - name: prometheus
-      port: 9999
-      targetPort: 9999
-      protocol: TCP
-    - name: jaeger-grpc
-      port: 14250
-      targetPort: 14250
-      protocol: TCP
-    - name: jaeger-binary
-      port: 6832
-      targetPort: 6832
-      protocol: TCP
-    - name: jaeger-compact
-      port: 6831
-      targetPort: 6831
-      protocol: TCP
-    - name: jaeger-http
-      port: 14268
-      targetPort: 14268
-      protocol: TCP
-    - name: zipkin
-      port: 9411
-      targetPort: 9411
-      protocol: TCP
----
-# Source: k8s-monitoring/charts/alloy/templates/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: k8smon-alloy
-  labels:
-    helm.sh/chart: alloy-0.3.2
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.1.1"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: networking
-spec:
-  type: ClusterIP
-  selector:
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-  internalTrafficPolicy: Cluster
-  ports:
-    - name: http-metrics
-      port: 12345
-      targetPort: 12345
-      protocol: "TCP"
-    - name: otlp-grpc
-      port: 4317
-      targetPort: 4317
-      protocol: TCP
-    - name: otlp-http
-      port: 4318
-      targetPort: 4318
-      protocol: TCP
-    - name: prometheus
-      port: 9999
-      targetPort: 9999
-      protocol: TCP
-    - name: jaeger-grpc
-      port: 14250
-      targetPort: 14250
-      protocol: TCP
-    - name: jaeger-binary
-      port: 6832
-      targetPort: 6832
-      protocol: TCP
-    - name: jaeger-compact
-      port: 6831
-      targetPort: 6831
-      protocol: TCP
-    - name: jaeger-http
-      port: 14268
-      targetPort: 14268
-      protocol: TCP
-    - name: zipkin
-      port: 9411
-      targetPort: 9411
-      protocol: TCP
----
-# Source: k8s-monitoring/templates/grafana-agent-receiver-service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: k8smon-grafana-agent
-  labels:
-    helm.sh/chart: alloy-0.3.2
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.1.1"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-spec:
-  type: ClusterIP
-  selector:
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-  internalTrafficPolicy: Cluster
-  ports:
-    - name: http-metrics
-      port: 12345
-      targetPort: 12345
-      protocol: "TCP"
-    - name: otlp-grpc
-      port: 4317
-      targetPort: 4317
-      protocol: TCP
-    - name: otlp-http
-      port: 4318
-      targetPort: 4318
-      protocol: TCP
-    - name: prometheus
-      port: 9999
-      targetPort: 9999
-      protocol: TCP
-    - name: jaeger-grpc
-      port: 14250
-      targetPort: 14250
-      protocol: TCP
-    - name: jaeger-binary
-      port: 6832
-      targetPort: 6832
-      protocol: TCP
-    - name: jaeger-compact
-      port: 6831
-      targetPort: 6831
-      protocol: TCP
-    - name: jaeger-http
-      port: 14268
-      targetPort: 14268
-      protocol: TCP
-    - name: zipkin
-      port: 9411
-      targetPort: 9411
-      protocol: TCP
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/controllers/daemonset.yaml
 apiVersion: apps/v1
@@ -960,11 +597,11 @@ kind: DaemonSet
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.3.2
+    helm.sh/chart: alloy-logs-0.7.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.3.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -977,6 +614,7 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: alloy
+        k8s.grafana.com/logs.job: integrations/alloy
       labels:
         app.kubernetes.io/name: alloy-logs
         app.kubernetes.io/instance: k8smon
@@ -984,7 +622,7 @@ spec:
       serviceAccountName: k8smon-alloy-logs
       containers:
         - name: alloy
-          image: docker.io/grafana/alloy:v1.1.1
+          image: docker.io/grafana/alloy:v1.3.1
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -1048,11 +686,11 @@ kind: Deployment
 metadata:
   name: k8smon-alloy-events
   labels:
-    helm.sh/chart: alloy-events-0.3.2
+    helm.sh/chart: alloy-events-0.7.0
     app.kubernetes.io/name: alloy-events
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.3.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -1066,6 +704,7 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: alloy
+        k8s.grafana.com/logs.job: integrations/alloy
       labels:
         app.kubernetes.io/name: alloy-events
         app.kubernetes.io/instance: k8smon
@@ -1073,7 +712,7 @@ spec:
       serviceAccountName: k8smon-alloy-events
       containers:
         - name: alloy
-          image: docker.io/grafana/alloy:v1.1.1
+          image: docker.io/grafana/alloy:v1.3.1
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -1117,124 +756,15 @@ spec:
       dnsPolicy: ClusterFirst
       nodeSelector:
         kubernetes.io/os: linux
+      tolerations:
+        - effect: NoSchedule
+          key: kubernetes.io/arch
+          operator: Equal
+          value: arm64
       volumes:
         - name: config
           configMap:
             name: k8smon-alloy-events
----
-# Source: k8s-monitoring/charts/alloy/templates/controllers/statefulset.yaml
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: k8smon-alloy
-  labels:
-    helm.sh/chart: alloy-0.3.2
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.1.1"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-spec:
-  replicas: 1
-  podManagementPolicy: Parallel
-  minReadySeconds: 10
-  serviceName: k8smon-alloy
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: alloy
-      app.kubernetes.io/instance: k8smon
-  template:
-    metadata:
-      annotations:
-        kubectl.kubernetes.io/default-container: alloy
-      labels:
-        app.kubernetes.io/name: alloy
-        app.kubernetes.io/instance: k8smon
-    spec:
-      serviceAccountName: k8smon-alloy
-      containers:
-        - name: alloy
-          image: docker.io/grafana/alloy:v1.1.1
-          imagePullPolicy: IfNotPresent
-          args:
-            - run
-            - /etc/alloy/config.alloy
-            - --storage.path=/tmp/alloy
-            - --server.http.listen-addr=0.0.0.0:12345
-            - --server.http.ui-path-prefix=/
-            - --cluster.enabled=true
-            - --cluster.join-addresses=k8smon-alloy-cluster
-            - --stability.level=generally-available
-          env:
-            - name: ALLOY_DEPLOY_MODE
-              value: "helm"
-            - name: HOSTNAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-          ports:
-            - containerPort: 12345
-              name: http-metrics
-            - containerPort: 4317
-              name: otlp-grpc
-              protocol: TCP
-            - containerPort: 4318
-              name: otlp-http
-              protocol: TCP
-            - containerPort: 9999
-              name: prometheus
-              protocol: TCP
-            - containerPort: 14250
-              name: jaeger-grpc
-              protocol: TCP
-            - containerPort: 6832
-              name: jaeger-binary
-              protocol: TCP
-            - containerPort: 6831
-              name: jaeger-compact
-              protocol: TCP
-            - containerPort: 14268
-              name: jaeger-http
-              protocol: TCP
-            - containerPort: 9411
-              name: zipkin
-              protocol: TCP
-          readinessProbe:
-            httpGet:
-              path: /-/ready
-              port: 12345
-              scheme: HTTP
-            initialDelaySeconds: 10
-            timeoutSeconds: 1
-          volumeMounts:
-            - name: config
-              mountPath: /etc/alloy
-            -
-              mountPath: /etc/kubernetes-monitoring-telemetry
-              name: kubernetes-monitoring-telemetry
-        - name: config-reloader
-          image: ghcr.io/jimmidyson/configmap-reload:v0.12.0
-          args:
-            - --volume-dir=/etc/alloy
-            - --webhook-url=http://localhost:12345/-/reload
-          volumeMounts:
-            - name: config
-              mountPath: /etc/alloy
-          resources:
-            requests:
-              cpu: 1m
-              memory: 5Mi
-      dnsPolicy: ClusterFirst
-      nodeSelector:
-        kubernetes.io/os: linux
-      volumes:
-        - name: config
-          configMap:
-            name: k8smon-alloy
-        - configMap:
-            name: kubernetes-monitoring-telemetry
-          name: kubernetes-monitoring-telemetry
 ---
 # Source: k8s-monitoring/templates/hooks/validate-configuration.yaml
 apiVersion: v1
@@ -1245,8 +775,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.3.4
-    helm.sh/chart: "k8s-monitoring-1.0.13"
+    app.kubernetes.io/version: 2.8.1
+    helm.sh/chart: "k8s-monitoring-1.5.1"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -1274,6 +804,75 @@ data:
     
     
     // Processors
+    loki.process "pod_logs" {
+      stage.match {
+        selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+        // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
+        stage.cri {}
+    
+        // Set the extract flags and stream values as labels
+        stage.labels {
+          values = {
+            flags  = "",
+            stream  = "",
+          }
+        }
+      }
+    
+      stage.match {
+        selector = "{tmp_container_runtime=\"docker\"}"
+        // the docker processing stage extracts the following k/v pairs: log, stream, time
+        stage.docker {}
+    
+        // Set the extract stream value as a label
+        stage.labels {
+          values = {
+            stream  = "",
+          }
+        }
+      }
+    
+      // Drop the filename label, since it's not really useful in the context of Kubernetes, where we already have cluster,
+      // namespace, pod, and container labels. Drop any structured metadata. Also drop the temporary
+      // container runtime label as it is no longer needed.
+      stage.label_drop {
+        values = [
+          "filename",
+          "tmp_container_runtime",
+        ]
+      }
+      forward_to = [loki.process.logs_service.receiver]
+    }
+    
+    // Logs Service
+    remote.kubernetes.secret "logs_service" {
+      name = "loki-k8s-monitoring"
+      namespace = "default"
+    }
+    
+    loki.process "logs_service" {
+      stage.static_labels {
+          values = {
+            cluster = "logs-journal",
+          }
+      }
+      forward_to = [loki.write.logs_service.receiver]
+    }
+    
+    // Loki
+    loki.write "logs_service" {
+      endpoint {
+        url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+        tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
+    
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+          password = remote.kubernetes.secret.logs_service.data["password"]
+        }
+      }
+    }
+    
+    
     logging {
       level  = "info"
       format = "logfmt"
@@ -1363,6 +962,18 @@ data:
         target_label = "job"
       }
       rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+        regex         = "(.+)"
+        target_label  = "app_kubernetes_io_name"
+      }
+    
+      rule {
+        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
+        regex         = "(.+)"
+        target_label  = "job"
+      }
+    
+      rule {
         source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
         separator = "/"
         action = "replace"
@@ -1400,7 +1011,7 @@ data:
     
     loki.process "pod_logs" {
       stage.match {
-        selector = "{tmp_container_runtime=\"containerd\"}"
+        selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
         // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
         stage.cri {}
     
@@ -1413,21 +1024,6 @@ data:
         }
       }
     
-      stage.match {
-        selector = "{tmp_container_runtime=\"cri-o\"}"
-        // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-        stage.cri {}
-    
-        // Set the extract flags and stream values as labels
-        stage.labels {
-          values = {
-            flags  = "",
-            stream  = "",
-          }
-        }
-      }
-    
-      // if the label tmp_container_runtime from above is docker parse using docker
       stage.match {
         selector = "{tmp_container_runtime=\"docker\"}"
         // the docker processing stage extracts the following k/v pairs: log, stream, time
@@ -1441,11 +1037,14 @@ data:
         }
       }
     
-      // Drop the filename label, since it's not really useful in the context of Kubernetes, where we already have
-      // cluster, namespace, pod, and container labels.
-      // Also drop the temporary container runtime label as it is no longer needed.
+      // Drop the filename label, since it's not really useful in the context of Kubernetes, where we already have cluster,
+      // namespace, pod, and container labels. Drop any structured metadata. Also drop the temporary
+      // container runtime label as it is no longer needed.
       stage.label_drop {
-        values = ["filename", "tmp_container_runtime"]
+        values = [
+          "filename",
+          "tmp_container_runtime",
+        ]
       }
       forward_to = [loki.process.logs_service.receiver]
     }
@@ -1493,8 +1092,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.3.4
-    helm.sh/chart: "k8s-monitoring-1.0.13"
+    app.kubernetes.io/version: 2.8.1
+    helm.sh/chart: "k8s-monitoring-1.5.1"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -1514,8 +1113,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.3.4
-    helm.sh/chart: "k8s-monitoring-1.0.13"
+    app.kubernetes.io/version: 2.8.1
+    helm.sh/chart: "k8s-monitoring-1.5.1"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -1524,9 +1123,14 @@ spec:
   restartPolicy: Never
   nodeSelector:
         kubernetes.io/os: linux
+  tolerations:
+        - effect: NoSchedule
+          key: kubernetes.io/arch
+          operator: Equal
+          value: arm64
   containers:
     - name: alloy
-      image: "docker.io/grafana/alloy:v1.1.1"
+      image: "docker.io/grafana/alloy:%!s(<nil>)"
       command:
       - bash
       - -c
@@ -1535,7 +1139,7 @@ spec:
         if ! alloy fmt /etc/alloy/config.alloy > /dev/null; then
           exit 1
         fi
-        output=$(alloy run "/etc/alloy/config.alloy" 2>&1)
+        output=$(alloy run --stability.level generally-available "/etc/alloy/config.alloy" 2>&1)
         if ! echo "${output}" | grep "KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined" >/dev/null; then
           echo "${output}"
           exit 1
@@ -1545,7 +1149,7 @@ spec:
         if ! alloy fmt /etc/alloy/events.alloy > /dev/null; then
           exit 1
         fi
-        output=$(alloy run "/etc/alloy/events.alloy" 2>&1)
+        output=$(alloy run --stability.level generally-available "/etc/alloy/events.alloy" 2>&1)
         if ! echo "${output}" | grep "KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined" >/dev/null; then
           echo "${output}"
           exit 1
@@ -1555,7 +1159,7 @@ spec:
         if ! alloy fmt /etc/alloy/logs.alloy > /dev/null; then
           exit 1
         fi
-        output=$(alloy run "/etc/alloy/logs.alloy" 2>&1)
+        output=$(alloy run --stability.level generally-available "/etc/alloy/logs.alloy" 2>&1)
         if ! echo "${output}" | grep "KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined" >/dev/null; then
           echo "${output}"
           exit 1
@@ -1575,33 +1179,6 @@ spec:
         name: "validate-k8smon-k8s-monitoring"
 ---
 # Source: k8s-monitoring/templates/tests/test.yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: "analyze-k8smon-k8s-monitoring"
-  namespace: default
-  labels:
-    app.kubernetes.io/managed-by: "Helm"
-    app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.3.4
-    helm.sh/chart: "k8s-monitoring-1.0.13"
-  annotations:
-    "helm.sh/hook": test
-    "helm.sh/hook-delete-policy": before-hook-creation
-    "helm.sh/hook-weight": "0"
-spec:
-  restartPolicy: OnFailure
-  nodeSelector:
-        kubernetes.io/os: linux
-  containers:
-    - name: config-analysis
-      image: ghcr.io/grafana/k8s-monitoring-test:1.0.13
-      command: [/etc/bin/config-analysis.sh]
-      env:
-        - name: ALLOY_HOST
-          value: k8smon-alloy.default.svc:12345
----
-# Source: k8s-monitoring/templates/tests/test.yaml
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -1610,8 +1187,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.3.4
-    helm.sh/chart: "k8s-monitoring-1.0.13"
+    app.kubernetes.io/version: 2.8.1
+    helm.sh/chart: "k8s-monitoring-1.5.1"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
@@ -1627,14 +1204,14 @@ spec:
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-1.0.13"
+        helm.sh/chart: "k8s-monitoring-1.5.1"
     spec:
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/os: linux
       containers:
         - name: query-test
-          image: ghcr.io/grafana/k8s-monitoring-test:1.0.13
+          image: ghcr.io/grafana/k8s-monitoring-test:1.5.1
           command: ["bash", "-c", "/etc/bin/query-test.sh /etc/test/testQueries.json"]
           volumeMounts:
             - name: test-files
