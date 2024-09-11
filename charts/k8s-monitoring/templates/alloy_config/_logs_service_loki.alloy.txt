@@ -5,8 +5,7 @@ loki.write "logs_service" {
   endpoint {
     url = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .hostKey | quote }}]) + "{{ .writeEndpoint }}"
     tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .tenantIdKey | quote }}])
-{{- if or .extraHeaders .extraHeadersFrom }}
-    headers = {
+    headers = { "Ocp-Apim-Subscription-Key" = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .basicAuth.passwordKey | quote }}]),
 {{- range $key, $value := .extraHeaders }}
       {{ $key | quote }} = {{ $value | quote }},
 {{- end }}
@@ -14,7 +13,6 @@ loki.write "logs_service" {
       {{ $key | quote }} = {{ $value }},
 {{- end }}
     }
-{{- end }}
 {{- if .proxyURL }}
     proxy_url = {{ .proxyURL | quote }}
 {{- end }}
