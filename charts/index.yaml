@@ -3,7 +3,7 @@ entries:
   k8s-monitoring:
   - apiVersion: v2
     appVersion: 2.8.1
-    created: "2024-09-12T07:26:12.209599-04:00"
+    created: "2024-09-12T07:52:34.893379-04:00"
     dependencies:
     - condition: alloy.enabled
       name: alloy
@@ -54,7 +54,7 @@ entries:
       version: 1.4.0
     description: forked for pavilion. A Helm chart for gathering, scraping, and forwarding
       Kubernetes telemetry data to a Grafana Stack.
-    digest: b9e00940e1309ab867ab319d4b0abbb8c10c4a3fc7c30f4d29dfeff45b38cac7
+    digest: 5e95f1c4cd6e5450995a4ad79fd1ece20db0fc5a6abf4512aacc625f2ebecc21
     icon: https://raw.githubusercontent.com/grafana/grafana/main/public/img/grafana_icon.svg
     maintainers:
     - email: pete.wall@grafana.com
@@ -68,4 +68,4 @@ entries:
     urls:
     - k8s-monitoring-1.5.12.tgz
     version: 1.5.12
-generated: "2024-09-12T07:26:12.189925-04:00"
+generated: "2024-09-12T07:52:34.875383-04:00"
