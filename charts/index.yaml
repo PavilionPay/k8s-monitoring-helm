@@ -52,7 +52,7 @@ entries:
       name: beyla
       repository: https://grafana.github.io/helm-charts
       version: 1.4.0
-    description: A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry
+    description: updated with apim A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry
       data to a Grafana Stack.
     digest: 91cf4b2770bab3b7174980a1b9da83d72d920c9d5ff5c3d4d8f79275831f9914
     icon: https://raw.githubusercontent.com/grafana/grafana/main/public/img/grafana_icon.svg
