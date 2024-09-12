@@ -3,7 +3,7 @@ entries:
   k8s-monitoring:
   - apiVersion: v2
     appVersion: 2.8.1
-    created: "2024-09-12T07:15:29.24893-04:00"
+    created: "2024-09-12T07:23:14.270386-04:00"
     dependencies:
     - condition: alloy.enabled
       name: alloy
@@ -52,9 +52,9 @@ entries:
       name: beyla
       repository: https://grafana.github.io/helm-charts
       version: 1.4.0
-    description: updated with apim A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry
+    description: A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry
       data to a Grafana Stack.
-    digest: 91cf4b2770bab3b7174980a1b9da83d72d920c9d5ff5c3d4d8f79275831f9914
+    digest: ea5451ad9665c2b6eb83301d0782f29d03742363bd7da71e6d3137caa4362ecc
     icon: https://raw.githubusercontent.com/grafana/grafana/main/public/img/grafana_icon.svg
     maintainers:
     - email: pete.wall@grafana.com
@@ -66,6 +66,6 @@ entries:
     - https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring
     type: application
     urls:
-    - k8s-monitoring-1.5.1-a.tgz
-    version: 1.5.1-a
-generated: "2024-09-12T07:15:29.229172-04:00"
+    - k8s-monitoring-1.5.12.tgz
+    version: 1.5.12
+generated: "2024-09-12T07:23:14.250868-04:00"
