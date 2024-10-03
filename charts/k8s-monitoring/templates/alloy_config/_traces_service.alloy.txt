@@ -18,7 +18,7 @@ otelcol.exporter.otlp "traces_service" {
 otelcol.exporter.otlphttp "traces_service" {
 {{- end }}
   client {
-    endpoint = nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .hostKey | quote }}])
+    endpoint = nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .hostKey | quote }}]) + "{{ .writeEndpoint }}"
 {{ if eq .authMode "basic" }}
     auth = otelcol.auth.basic.traces_service.handler
 {{- end }}
